@@ -2,23 +2,72 @@ package de.ravaqor.mcdiscordintegration;
 
 import net.fabricmc.api.ModInitializer;
 
+import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
+import net.minecraft.network.message.MessageType;
+import net.minecraft.network.message.SignedMessage;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
+import org.apache.logging.log4j.core.jmx.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 public class MCDiscordIntegration implements ModInitializer {
 	public static final String MOD_ID = "mc-discord-integration";
 
-	// This logger is used to write text to the console and the log file.
-	// It is considered best practice to use your mod id as the logger's name.
-	// That way, it's clear which mod wrote info, warnings, and errors.
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-	@Override
-	public void onInitialize() {
-		// This code runs as soon as Minecraft is in a mod-load-ready state.
-		// However, some things (like resources) may still be uninitialized.
-		// Proceed with mild caution.
+    private static final HttpClient HTTP = HttpClient.newHttpClient();
+    private static final String WEBHOOK_URL = "";
 
-		LOGGER.info("Hello Fabric world!");
-	}
+    @Override
+    public void onInitialize() {
+        ServerMessageEvents.CHAT_MESSAGE.register(MCDiscordIntegration::onChatMessage);
+        ServerMessageEvents.GAME_MESSAGE.register(MCDiscordIntegration::onServerMessage);
+    }
+
+    private static void onChatMessage(
+            SignedMessage message,
+            ServerPlayerEntity sender,
+            MessageType.Parameters params) {
+        String playerName = sender.getName().getString();
+        String content = message.getContent().getString();
+        send(playerName, content);
+    }
+
+    private static void onServerMessage(
+            MinecraftServer server,
+            Text text,
+            boolean b) {
+        send("Server", text.getString());
+    }
+
+    private static void send(String username, String message) {
+        String safeUsername = username.replace("\\", "\\\\").replace("\"", "\\\"");
+        String safeContent  = message.replace("\\", "\\\\").replace("\"", "\\\"");
+
+        String json = """
+                {
+                  "username": "%s",
+                  "content": "%s"
+                }
+                """.formatted(safeUsername, safeContent);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(WEBHOOK_URL))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(json))
+                .build();
+
+        HTTP.sendAsync(request, HttpResponse.BodyHandlers.discarding())
+                .exceptionally(e -> {
+                    LOGGER.error("Discord Webhook failed: " + e.getMessage());
+                    return null;
+                });
+    }
 }
