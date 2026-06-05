@@ -49,7 +49,7 @@ public class ModConfig {
         return PROPS.getProperty("enabled", "true");
     }
 
-    public static void setEnabled(String url) {
-        PROPS.setProperty("webhookUrl", url);
+    public static void setEnabled(String enabled) {
+        PROPS.setProperty("enabled", enabled);
     }
 }
