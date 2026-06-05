@@ -1,5 +1,7 @@
 package de.ravaqor.mcdiscordintegration;
 
+import de.ravaqor.mcdiscordintegration.config.ConfigCommand;
+import de.ravaqor.mcdiscordintegration.config.ModConfig;
 import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
@@ -23,10 +25,12 @@ public class MCDiscordIntegration implements ModInitializer {
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
     private static final HttpClient HTTP = HttpClient.newHttpClient();
-    private static final String WEBHOOK_URL = "";
 
     @Override
     public void onInitialize() {
+        ModConfig.load();
+        ConfigCommand.register();
+
         ServerMessageEvents.CHAT_MESSAGE.register(MCDiscordIntegration::onChatMessage);
         ServerMessageEvents.GAME_MESSAGE.register(MCDiscordIntegration::onServerMessage);
     }
@@ -48,26 +52,30 @@ public class MCDiscordIntegration implements ModInitializer {
     }
 
     private static void send(String username, String message) {
-        String safeUsername = username.replace("\\", "\\\\").replace("\"", "\\\"");
-        String safeContent  = message.replace("\\", "\\\\").replace("\"", "\\\"");
+        String webhookURL = ModConfig.getWebhookUrl();
+        if (!webhookURL.isEmpty()) {
 
-        String json = """
+            String safeUsername = username.replace("\\", "\\\\").replace("\"", "\\\"");
+            String safeContent  = message.replace("\\", "\\\\").replace("\"", "\\\"");
+
+            String json = """
                 {
                   "username": "%s",
                   "content": "%s"
                 }
                 """.formatted(safeUsername, safeContent);
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(WEBHOOK_URL))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(json))
-                .build();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(webhookURL))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(json))
+                    .build();
 
-        HTTP.sendAsync(request, HttpResponse.BodyHandlers.discarding())
-                .exceptionally(e -> {
-                    LOGGER.error("Discord Webhook failed: " + e.getMessage());
-                    return null;
-                });
+            HTTP.sendAsync(request, HttpResponse.BodyHandlers.discarding())
+                    .exceptionally(e -> {
+                        LOGGER.error("Discord Webhook failed: " + e.getMessage());
+                        return null;
+                    });
+        }
     }
 }
