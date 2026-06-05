@@ -45,11 +45,19 @@ public class ModConfig {
         PROPS.setProperty("webhookUrl", url);
     }
 
-    public static String getEnabled() {
-        return PROPS.getProperty("enabled", "true");
+    public static boolean getEnabled() {
+        return Boolean.parseBoolean(PROPS.getProperty("enabled", "true"));
     }
 
-    public static void setEnabled(String enabled) {
-        PROPS.setProperty("enabled", enabled);
+    public static void setEnabled(boolean enabled) {
+        PROPS.setProperty("enabled", String.valueOf(enabled));
+    }
+
+    public static boolean getServerMessagesEnabled() {
+        return Boolean.parseBoolean(PROPS.getProperty("serverMessagesEnabled", "true"));
+    }
+
+    public static void setServerMessagesEnabled(boolean serverMessagesEnabled) {
+        PROPS.setProperty("serverMessagesEnabled", String.valueOf(serverMessagesEnabled));
     }
 }

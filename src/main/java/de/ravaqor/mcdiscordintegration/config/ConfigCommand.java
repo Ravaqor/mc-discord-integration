@@ -1,5 +1,6 @@
 package de.ravaqor.mcdiscordintegration.config;
 
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.server.command.CommandManager;
@@ -53,21 +54,14 @@ public class ConfigCommand {
                                     })
                             )
                             .then(CommandManager.literal("setEnabled")
-                                    .then(CommandManager.argument("boolean", StringArgumentType.greedyString())
+                                    .then(CommandManager.argument("value", BoolArgumentType.bool())
                                             .executes(ctx -> {
-                                                String enabled = StringArgumentType.getString(ctx, "enabled");
-                                                if (!enabled.equalsIgnoreCase("true") && !enabled.equalsIgnoreCase("false")) {
-                                                    ctx.getSource().sendFeedback(
-                                                            () -> Text.literal("§cInvalid Argument! Use <false> or <true>"),
-                                                            false
-                                                    );
-                                                    return 0;
-                                                }
+                                                boolean enabled = BoolArgumentType.getBool(ctx, "value");
 
                                                 ModConfig.setEnabled(enabled);
                                                 ModConfig.save();
                                                 ctx.getSource().sendFeedback(
-                                                        () -> Text.literal(enabled.equalsIgnoreCase("true")
+                                                        () -> Text.literal(enabled
                                                                 ? "§aSending messages is now enabled!" : "§aSending messages is now disabled"),
                                                         true
                                                 );
@@ -77,9 +71,34 @@ public class ConfigCommand {
                             )
                             .then(CommandManager.literal("getEnabled")
                                     .executes(ctx -> {
-                                        String enabled = ModConfig.getEnabled();
+                                        boolean enabled = ModConfig.getEnabled();
                                         ctx.getSource().sendFeedback(
                                                 () -> Text.literal("Mc-Discord-Integration: " + enabled),
+                                                false
+                                        );
+                                        return 1;
+                                    })
+                            )
+                            .then(CommandManager.literal("setServerMessagesEnabled")
+                                    .then(CommandManager.argument("value", BoolArgumentType.bool())
+                                            .executes(ctx -> {
+                                                boolean enabled = BoolArgumentType.getBool(ctx, "value");
+                                                ModConfig.setServerMessagesEnabled(enabled);
+                                                ModConfig.save();
+                                                ctx.getSource().sendFeedback(
+                                                        () -> Text.literal(enabled
+                                                                ? "§aSending server messages is now enabled!" : "§aSending server messages is now disabled"),
+                                                        true
+                                                );
+                                                return 1;
+                                            })
+                                    )
+                            )
+                            .then(CommandManager.literal("getServerMessagesEnabled")
+                                    .executes(ctx -> {
+                                        boolean enabled = ModConfig.getServerMessagesEnabled();
+                                        ctx.getSource().sendFeedback(
+                                                () -> Text.literal("Server messages enabled: " + enabled),
                                                 false
                                         );
                                         return 1;

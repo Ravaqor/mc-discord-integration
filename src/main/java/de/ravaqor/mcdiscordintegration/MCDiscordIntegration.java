@@ -48,11 +48,13 @@ public class MCDiscordIntegration implements ModInitializer {
             MinecraftServer server,
             Text text,
             boolean b) {
-        send("Server", text.getString());
+        if (ModConfig.getServerMessagesEnabled()) {
+            send("Server", text.getString());
+        }
     }
 
     private static void send(String username, String message) {
-        if (ModConfig.getEnabled().equalsIgnoreCase("false")) {
+        if (!ModConfig.getEnabled()) {
             return;
         }
 
