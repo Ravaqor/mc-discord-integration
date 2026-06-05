@@ -52,6 +52,10 @@ public class MCDiscordIntegration implements ModInitializer {
     }
 
     private static void send(String username, String message) {
+        if (ModConfig.getEnabled().equalsIgnoreCase("false")) {
+            return;
+        }
+
         String webhookURL = ModConfig.getWebhookUrl();
         if (!webhookURL.isEmpty()) {
 

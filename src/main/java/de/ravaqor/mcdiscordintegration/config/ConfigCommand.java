@@ -52,6 +52,40 @@ public class ConfigCommand {
                                         return 1;
                                     })
                             )
+                            .then(CommandManager.literal("setEnabled")
+                                    .then(CommandManager.argument("boolean", StringArgumentType.greedyString())
+                                            .executes(ctx -> {
+                                                String enabled = StringArgumentType.getString(ctx, "enabled");
+                                                if (!enabled.equalsIgnoreCase("true") && !enabled.equalsIgnoreCase("false")) {
+                                                    ctx.getSource().sendFeedback(
+                                                            () -> Text.literal("§cInvalid Argument! Use <false> or <true>"),
+                                                            false
+                                                    );
+                                                    return 0;
+                                                }
+
+                                                ModConfig.setEnabled(enabled);
+                                                ModConfig.save();
+                                                ctx.getSource().sendFeedback(
+                                                        () -> Text.literal(enabled.equalsIgnoreCase("true")
+                                                                ? "§aSending messages is now enabled!" : "§aSending messages is now disabled"),
+                                                        true
+                                                );
+                                                return 1;
+                                            })
+                                    )
+                            )
+                            .then(CommandManager.literal("getEnabled")
+                                    .executes(ctx -> {
+                                        String enabled = ModConfig.getEnabled();
+                                        ctx.getSource().sendFeedback(
+                                                () -> Text.literal("Mc-Discord-Integration: " + enabled),
+                                                false
+                                        );
+                                        return 1;
+                                    })
+                            )
+
             );
         });
     }

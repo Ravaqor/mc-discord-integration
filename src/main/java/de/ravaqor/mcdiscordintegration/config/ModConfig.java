@@ -11,8 +11,6 @@ import static de.ravaqor.mcdiscordintegration.MCDiscordIntegration.MOD_ID;
 
 public class ModConfig {
 
-    private static ModConfig instance;
-
     private static final Properties PROPS = new Properties();
 
     private static final Path CONFIG_PATH = FabricLoader.getInstance()
@@ -44,6 +42,14 @@ public class ModConfig {
     }
 
     public static void setWebhookUrl(String url) {
+        PROPS.setProperty("webhookUrl", url);
+    }
+
+    public static String getEnabled() {
+        return PROPS.getProperty("enabled", "true");
+    }
+
+    public static void setEnabled(String url) {
         PROPS.setProperty("webhookUrl", url);
     }
 }
