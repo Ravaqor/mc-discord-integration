@@ -6,13 +6,12 @@ import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
-import net.minecraft.network.message.MessageType;
-import net.minecraft.network.message.SignedMessage;
+import net.minecraft.network.chat.ChatType;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.PlayerChatMessage;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.WorldSavePath;
-import org.apache.logging.log4j.core.jmx.Server;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.storage.LevelResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +31,7 @@ public class MCDiscordIntegration implements ModInitializer {
     @Override
     public void onInitialize() {
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
-            Path worldConfig = server.getSavePath(WorldSavePath.ROOT).resolve("mcDiscordIntegration.properties");
+            Path worldConfig = server.getWorldPath(LevelResource.ROOT).resolve("mcDiscordIntegration.properties");
             ModConfig.load(worldConfig);
         });
 
@@ -49,17 +48,17 @@ public class MCDiscordIntegration implements ModInitializer {
     }
 
     private static void onChatMessage(
-            SignedMessage message,
-            ServerPlayerEntity sender,
-            MessageType.Parameters params) {
+            PlayerChatMessage message,
+            ServerPlayer sender,
+            ChatType.Bound params) {
         String playerName = sender.getName().getString();
-        String content = message.getContent().getString();
+        String content = message.decoratedContent().getString();
         send(playerName, content);
     }
 
     private static void onServerMessage(
             MinecraftServer server,
-            Text text,
+            Component text,
             boolean b) {
         if (ModConfig.getServerMessagesEnabled()) {
             send("Server", text.getString());
